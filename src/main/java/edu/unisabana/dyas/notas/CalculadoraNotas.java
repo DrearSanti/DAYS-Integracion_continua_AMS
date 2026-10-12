@@ -34,7 +34,18 @@ public class CalculadoraNotas {
     }
 
     public double notaNecesariaTercerCorte(double corte1, double corte2) {
-        return 0;
+        // Despeje de la definitiva: corte3 = (3.0 - 0.3*corte1 - 0.3*corte2) / 0.4
+        // Se redondea hacia arriba (CEILING) para que la nota indicada siempre alcance para aprobar.
+        BigDecimal necesaria = NOTA_APROBATORIA
+                .subtract(validar(corte1, "corte 1").multiply(PESO_CORTE_1))
+                .subtract(validar(corte2, "corte 2").multiply(PESO_CORTE_2))
+                .divide(PESO_CORTE_3, 1, RoundingMode.CEILING);
+        if (necesaria.compareTo(NOTA_MAXIMA) > 0) {
+            throw new IllegalStateException(
+                    "Ya no es posible aprobar: se necesitaría " + necesaria + " en el corte 3");
+        }
+        // Si ya aprobó con los dos primeros cortes, no necesita nada en el tercero (nunca menos de 0.0).
+        return necesaria.max(NOTA_MINIMA).doubleValue();
     }
 
     private BigDecimal validar(double nota, String nombre) {
